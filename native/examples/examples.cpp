@@ -24,6 +24,7 @@ int main()
         cout << "| 5. Rotation                | 5_rotation.cpp             |" << endl;
         cout << "| 6. Serialization           | 6_serialization.cpp        |" << endl;
         cout << "| 7. Performance Test        | 7_performance.cpp          |" << endl;
+        cout << "| 8. Custom Test             | 1_bfv_basics.cpp           |" << endl;
         cout << "+----------------------------+----------------------------+" << endl;
 
         /*
@@ -40,12 +41,12 @@ int main()
         bool valid = true;
         do
         {
-            cout << endl << "> Run example (1 ~ 7) or exit (0): ";
+            cout << endl << "> Run example (1 ~ 8) or exit (0): ";
             if (!(cin >> selection))
             {
                 valid = false;
             }
-            else if (selection < 0 || selection > 7)
+            else if (selection < 0 || selection > 8)
             {
                 valid = false;
             }
@@ -90,6 +91,9 @@ int main()
         case 7:
             example_performance_test();
             break;
+
+        case 8:
+            custom_test();
 
         case 0:
             return 0;

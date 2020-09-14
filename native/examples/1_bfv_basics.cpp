@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 #include "examples.h"
+#include "seal/util/polyarithsmallmod.h"
 
 using namespace std;
 using namespace seal;
@@ -425,4 +426,147 @@ void example_bfv_basics()
     /*
     This information is helpful to fix invalid encryption parameters.
     */
+}
+
+const uint64_t logN = 15;
+// const uint64_t modulo = 0x80000000080001ULL;
+const uint64_t modulo = 18014398492704769ULL;
+random_device r;
+default_random_engine e1(r());
+uniform_int_distribution<uint64_t> uniform_coeff(0, modulo - 1);
+
+void test_ntt_and_mul()
+{
+    MemoryPoolHandle pool_ = seal::MemoryManager::GetPool(seal::mm_prof_opt::FORCE_NEW, true);
+    util::NTTTables *tables = nullptr;
+    tables = new seal::util::NTTTables(logN, modulo, pool_);
+    // cout << "table coeff count = " << tables->coeff_count() << endl;
+    // cout << "root = " << tables->get_root() << endl;
+    // cout << "table:\n[ "; for (int i = 0; i < (1 << (logN - 3)); i++) { cout << i << "th: (" << tables->get_from_root_powers(i).operand << ", " << tables->get_from_root_powers(i).quotient << "), "; } cout << "]\n" << endl;
+    uint64_t poly1[1 << logN], poly2[1 << logN], prod[1 << logN];
+    for (int i = 0; i < (1 << logN); i++) { poly1[i] = uniform_coeff(e1); poly2[i] = uniform_coeff(e1); }
+    // for (int i = 0; i < (1 << logN); i++) { poly1[i] = 0; poly2[i] = 0; poly1[1] = 1; poly2[1] = 1; }
+    // cout << "poly -- all blocks: " << intptr_t(poly) << endl;
+    util::CoeffIter iter1(poly1);
+    util::CoeffIter iter2(poly2);
+    util::CoeffIter result(prod);
+    // uint64_t original_poly1[1 << logN];
+    // uint64_t original_poly2[1 << logN];
+    // for (int i = 0; i < (1 << logN); i++) { original_poly1[i] = poly1[i]; original_poly2[i] = poly2[i]; }
+    // cout << "original poly: [ "; for (int i = 0; i < (1 << logN); i++) { cout << iter[i] << ", "; } cout << "]\n" << endl;
+    // util::ntt_negacyclic_harvey(iter1, *tables);
+    // cout << "ntt results: " << endl;
+    // uint64_t ndiv8 = 1 << (logN - 3);
+    // for (int i = 0; i < 8; i++) {
+    //     cout << "[ ";
+    //     for (int idx = i * ndiv8; idx < (i + 1) * ndiv8; idx++) { cout << poly[idx] << ", "; }
+    //     cout << "]\n";
+    // }
+    // cout << endl;
+    // util::inverse_ntt_negacyclic_harvey(iter1, *tables);
+    // cout << "recovered poly: [ "; for (int i = 0; i < (1 << logN); i++) { cout << iter[i] << ", "; } cout << "]\n" << endl;
+    // cout << "\nNTT Correct?\n";
+    // for (int i = 0; i < (1 << logN); i++) { if (poly2[i] != poly1[i]) { cout << "Incorrect.\n"; break; } }
+
+    // util::ntt_negacyclic_harvey(iter1, *tables);
+    // util::ntt_negacyclic_harvey(iter2, *tables);
+    // uint64_t tmp_poly[1 << logN];
+    // for (int i = 0; i < (1 << logN); i++) { tmp_poly[i] = poly1[i]; }
+    // util::CoeffIter tmp_iter(tmp_poly);
+    // util::inverse_ntt_negacyclic_harvey(tmp_iter, *tables);
+    // cout << "\nntt(poly1) correct? "; for (int i = 0; i < (1 << logN); i++) { if (tmp_iter[i] != original_poly1[i]) { cout << "Incorrect.\n"; break; } }
+    // for (int i = 0; i < (1 << logN); i++) { tmp_poly[i] = poly2[i]; }
+    // util::inverse_ntt_negacyclic_harvey(tmp_iter, *tables);
+    // cout << "\nntt(poly2) correct? "; for (int i = 0; i < (1 << logN); i++) { if (tmp_iter[i] != original_poly2[i]) { cout << "Incorrect.\n"; break; } }
+    // dyadic_product_coeffmod(iter1, iter2, 1 << logN, modulo, *tables, result);
+    // util::inverse_ntt_negacyclic_harvey(result, *tables);
+    // for (int i = 0; i < (1 << logN); i++) { tmp_poly[i] = 0; }
+    // for (int i = 0; i < (1 << logN); i++) {
+    //     for (int j = 0; j < (1 << logN); j++) {
+    //         uint64_t tmp = (__uint128_t)original_poly1[i] * original_poly2[j] % modulo;
+    //         if (i + j < (1 << logN)) {
+    //             tmp_poly[i + j] += tmp;
+    //             tmp_poly[i + j] %= modulo;
+    //         } else {
+    //             tmp_poly[i + j - (1 << logN)] += modulo - tmp;
+    //             tmp_poly[i + j - (1 << logN)] %= modulo;
+    //         }
+    //     }
+    // }
+    // cout << "\nproduct correct? "; for (int i = 0; i < (1 << logN); i++) { if (tmp_poly[i] != result[i]) { cout << "Incorrect.\n"; break; } }
+    cout << endl;
+
+    // cout << "\ntable for dyadic: [ ";
+    // for (int i = 0; i < (1 << logN) / 8; i++) {
+    //     cout << tables->get_x_ntt_form(i) << ", ";
+    // }
+    // cout << "] " << endl;
+
+
+    // timing
+    // ...
+    const uint64_t count = 10000;
+    chrono::high_resolution_clock::time_point time_start, time_end;
+    chrono::microseconds time_diff;
+    time_start = chrono::high_resolution_clock::now();
+    for (int i = 0; i < count; i++) {
+        util::ntt_negacyclic_harvey(iter1, *tables);
+        util::ntt_negacyclic_harvey(iter2, *tables);
+        dyadic_product_coeffmod(iter1, iter2, 1 << logN, modulo, result);
+        util::inverse_ntt_negacyclic_harvey(result, *tables);
+    }
+    time_end = chrono::high_resolution_clock::now();
+    time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+    // cout << "Done [" << time_diff.count() / count << " microseconds]" << endl;
+    cout << "SEAL:" << endl;
+    cout << "Average poly mul using NTT: " << time_diff.count() / count << " microseconds" << endl;
+}
+
+// void test_enc_and_dec() {
+//     cout << "Test enc and then dec:\n";
+//     EncryptionParameters parms(scheme_type::BFV);
+//     parms.set_poly_modulus_degree(1 << logN);
+//     parms.set_coeff_modulus(CoeffModulus::BFVDefault(1 << logN));
+//     // cout << "moduli: [ "; for (auto& m: (parms.coeff_modulus())) { cout << m.value() << ", "; } cout << "] " << endl;
+//     parms.set_plain_modulus(PlainModulus::Batching(1 << logN, 32));
+//     auto ctx = SEALContext::Create(parms);
+//     auto& ctx_data = *ctx -> key_context_data();
+//     vector<uint64_t> raw;
+//     for (int i = 0; i < (1 << logN); i++) { raw.push_back(uniform_coeff(e1)); }
+//     // cout << "Initial data: [ "; for (auto& item: raw) { cout << item << ", "; } cout << "] " << endl;
+//     BatchEncoder bencoder(ctx);
+//     Plaintext plain;
+//     Plaintext plain_recovered;
+//     bencoder.encode(raw, plain);
+//     Ciphertext cipher;
+//     KeyGenerator kg(ctx);
+//     auto sk = kg.secret_key();
+//     auto pk = kg.public_key();
+//     Encryptor enc(ctx, pk);
+//     Decryptor dec(ctx, sk);
+
+
+//     // timing
+//     // ...
+//     chrono::high_resolution_clock::time_point time_start, time_end;
+//     chrono::microseconds time_diff;
+//     time_start = chrono::high_resolution_clock::now();
+//     for (int i = 0; i < 10000; i++) {
+//         enc.encrypt(plain, cipher);
+//         dec.decrypt(cipher, plain_recovered);
+//     }
+//     time_end = chrono::high_resolution_clock::now();
+//     time_diff = chrono::duration_cast<chrono::microseconds>(time_end - time_start);
+//     cout << "Done [" << time_diff.count() / 10000 << " microseconds]" << endl;
+
+//     vector<uint64_t> raw_recovered;
+//     raw_recovered.resize(1 << logN);
+//     bencoder.decode(plain_recovered, raw_recovered);
+
+//     if (plain_recovered != plain) { cout << "Incorrect." << endl; } else { cout << "Correct." << endl; }
+//     // cout << "Recovered data: [ "; for (auto& item: raw_recovered) { cout << item << ", "; } cout << "] " << endl;
+// }
+
+void custom_test() {
+    test_ntt_and_mul();
 }

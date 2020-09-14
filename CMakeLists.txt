@@ -13,6 +13,13 @@ cmake_minimum_required(VERSION 3.12)
 
 project(SEAL VERSION 3.5.8 LANGUAGES CXX C)
 
+# set(CMAKE_VERBOSE_MAKEFILE on)
+# option(USE_GCC9 ON)
+# if(USE_GCC9)
+#     set(CMAKE_C_COMPILER "/usr/bin/gcc-9")
+#     set(CMAKE_CXX_COMPILER "/usr/bin/g++-9")
+# endif()
+
 # Check operating system: for Windows, use Visual Studio solution/project files.
 if(MSVC)
     if(ALLOW_COMMAND_LINE_BUILD)
